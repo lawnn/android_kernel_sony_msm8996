@@ -338,9 +338,7 @@ config SUSPEND_TIME
 	  keeps statistics on the time spent in suspend in
 	  /sys/kernel/debug/suspend_time
 
-config WAKEUP_IRQ_DEBUG
-	bool "Debug info of wakeup irq"
-	default n
-	---help---
-	  This enables debug information about wakeup interrupts using
-	  sysfs (/sys/kernel/).
+config PM_SYNC_BEFORE_SUSPEND
+	bool "Sync file systems before suspend"
+	depends on PM
+	default y
