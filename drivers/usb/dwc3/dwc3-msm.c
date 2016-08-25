@@ -4313,7 +4313,8 @@ static void dwc3_otg_sm_work(struct work_struct *w)
 		} else {
 			mdwc->chg_type = DWC3_INVALID_CHARGER;
 			mdwc->chg_state = USB_CHG_STATE_UNDEFINED;
-			dwc3_msm_gadget_vbus_draw(mdwc, 0);
+			if (mdwc->chg_type != DWC3_INVALID_CHARGER)
+				dwc3_msm_gadget_vbus_draw(mdwc, 0);
 			dev_dbg(mdwc->dev, "No device, allowing suspend\n");
 		}
 		break;
