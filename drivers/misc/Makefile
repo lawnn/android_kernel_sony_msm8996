@@ -79,3 +79,4 @@ obj-$(CONFIG_DTV_TUNER_SMTEW10X) += dtv_tuner_drv.o
 obj-$(CONFIG_BCM_WLAN_RAMDUMP) += bcm_wlan_ramdump.o
 obj-$(CONFIG_SENSORS_TCS3490_KAGURA) += tcs3490.o
 obj-$(CONFIG_TOF_SENSOR) += tof_sensor.o
+obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
