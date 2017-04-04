@@ -9,6 +9,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+/*
+ * NOTE: This file has been modified by Sony Mobile Communications Inc.
+ * Modifications are Copyright (c) 2014 Sony Mobile Communications Inc,
+ * and licensed under the license of the file.
+ */
 
 #include <linux/module.h>
 #include <linux/string.h>
@@ -41,6 +46,9 @@
 #include <asm-generic/io-64-nonatomic-lo-hi.h>
 
 #include "peripheral-loader.h"
+#ifdef CONFIG_RAMDUMP_MEMDESC
+#include <linux/ramdump_mem_desc.h>
+#endif
 
 #define pil_err(desc, fmt, ...)						\
 	dev_err(desc->dev, "%s: " fmt, desc->name, ##__VA_ARGS__)
@@ -722,6 +730,43 @@ static int pil_parse_devicetree(struct pil_desc *desc)
 	return 0;
 }
 
+#ifdef CONFIG_RAMDUMP_MEMDESC
+/* Tag the subsystem information in ramdump memory descriptors */
+static void get_mem_desc_subsys_name(const struct pil_priv *priv,
+					struct mem_desc *mem_desc_subsys)
+{
+	if (!strncmp(priv->desc->name, "modem", MEM_DESC_NAME_SIZE))
+		strlcpy(mem_desc_subsys->name, "amsscore", MEM_DESC_NAME_SIZE);
+	else {
+		snprintf(mem_desc_subsys->name, MEM_DESC_NAME_SIZE, "%score",
+				priv->desc->name);
+	}
+}
+
+static void add_mem_desc_subsys_info(const struct pil_priv *priv)
+{
+	struct mem_desc mem_desc_subsys;
+
+	mem_desc_subsys.phys_addr = priv->region_start;
+	mem_desc_subsys.size = priv->region_end - priv->region_start;
+	mem_desc_subsys.flags = MEM_DESC_CORE;
+	get_mem_desc_subsys_name(priv, &mem_desc_subsys);
+	ramdump_add_mem_desc(&mem_desc_subsys);
+}
+
+static void remove_mem_desc_subsys_info(const struct pil_priv *priv)
+{
+	struct mem_desc mem_desc_subsys;
+
+	mem_desc_subsys.phys_addr = priv->region_start;
+	mem_desc_subsys.size = priv->region_end - priv->region_start;
+	mem_desc_subsys.flags = MEM_DESC_CORE;
+	get_mem_desc_subsys_name(priv, &mem_desc_subsys);
+	ramdump_remove_mem_desc(&mem_desc_subsys);
+}
+
+#endif
+
 /* Synchronize request_firmware() with suspend */
 static DECLARE_RWSEM(pil_pm_rwsem);
 
@@ -811,17 +856,15 @@ int pil_boot(struct pil_desc *desc)
 	}
 
 	if (desc->subsys_vmid > 0) {
-		/* In case of modem ssr, we need to assign memory back to linux.
-		 * This is not true after cold boot since linux already owns it.
-		 * Also for secure boot devices, modem memory has to be released
-		 * after MBA is booted. */
-		if (desc->modem_ssr) {
-			ret = pil_assign_mem_to_linux(desc, priv->region_start,
+		/* Make sure the memory is actually assigned to Linux. In the
+		 * case where the shutdown sequence is not able to immediately
+		 * assign the memory back to Linux, we need to do this here. */
+		ret = pil_assign_mem_to_linux(desc, priv->region_start,
 				(priv->region_end - priv->region_start));
-			if (ret)
-				pil_err(desc, "Failed to assign to linux, ret- %d\n",
+		if (ret)
+			pil_err(desc, "Failed to assign to linux, ret - %d\n",
 								ret);
-		}
+
 		ret = pil_assign_mem_to_subsys_and_linux(desc,
 				priv->region_start,
 				(priv->region_end - priv->region_start));
@@ -832,6 +875,10 @@ int pil_boot(struct pil_desc *desc)
 		}
 		hyp_assign = true;
 	}
+
+#ifdef CONFIG_RAMDUMP_MEMDESC
+	add_mem_desc_subsys_info(priv);
+#endif
 
 	list_for_each_entry(seg, &desc->priv->segs, list) {
 		ret = pil_load_seg(desc, seg);
@@ -857,7 +904,6 @@ int pil_boot(struct pil_desc *desc)
 		goto err_auth_and_reset;
 	}
 	pil_info(desc, "Brought out of reset\n");
-	desc->modem_ssr = false;
 err_auth_and_reset:
 	if (ret && desc->subsys_vmid > 0) {
 		pil_assign_mem_to_linux(desc, priv->region_start,
@@ -884,6 +930,9 @@ out:
 						priv->region_start),
 					VMID_HLOS);
 			}
+#ifdef CONFIG_RAMDUMP_MEMDESC
+			remove_mem_desc_subsys_info(priv);
+#endif
 			dma_free_attrs(desc->dev, priv->region_size,
 					priv->region, priv->region_start,
 					&desc->attrs);
@@ -918,7 +967,9 @@ void pil_shutdown(struct pil_desc *desc)
 		pil_proxy_unvote(desc, 1);
 	else
 		flush_delayed_work(&priv->proxy);
-	desc->modem_ssr = true;
+#ifdef CONFIG_RAMDUMP_MEMDESC
+	remove_mem_desc_subsys_info(priv);
+#endif
 }
 EXPORT_SYMBOL(pil_shutdown);
 
