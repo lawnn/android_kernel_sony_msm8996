@@ -1,0 +1,9 @@
+###########################################################
+# kernel version
+###########################################################
+BUILD_VERSION="v0.1"
+
+
+ANDROID_VERSION=STOCK-MM
+export BUILD_LOCALVERSION="$TARGET_DEVICE-$ANDROID_VERSION-$BUILD_VERSION"
+
