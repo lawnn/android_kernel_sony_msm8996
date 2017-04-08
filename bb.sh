@@ -10,7 +10,11 @@ KERNEL_DIR=$PWD
 IMAGE_NAME=boot
 
 # set kernel version
+if [ "$BUILD_TARGET" = 'dora' ]; then
+TARGET_DEVICE=dora
+else
 TARGET_DEVICE=kagura
+fi
 BUILD_VERSION=V0.1.0
 
 # set build user and host
@@ -27,8 +31,13 @@ KERNEL_PAGESIZE=4096
 KERNEL_DEFCONFIG=kagura_defconfig
 
 # ramdisk
+if [ "$BUILD_TARGET" = 'dora' ]; then
+RAMDISK_SRC_DIR=../f8132_boot_ramdisk
+RAMDISK_TMP_DIR=/tmp/f8132_boot_ramdisk
+else
 RAMDISK_SRC_DIR=../f8332_boot_ramdisk
 RAMDISK_TMP_DIR=/tmp/f8332_boot_ramdisk
+fi
 
 IMAGE_NAME=boot
 THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
