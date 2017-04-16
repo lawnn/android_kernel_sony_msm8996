@@ -148,6 +148,10 @@ static void mdss_mdp_kcal_update_pcc(struct kcal_lut_data *lut_data)
 
 static void mdss_mdp_kcal_read_pcc(struct kcal_lut_data *lut_data)
 {
+#ifdef CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL
+	u32 copy_from_kernel = 1;
+#endif /* CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL */
+
 	u32 copyback = 0;
 	struct mdp_pcc_cfg_data pcc_config;
 
@@ -156,7 +160,11 @@ static void mdss_mdp_kcal_read_pcc(struct kcal_lut_data *lut_data)
 	pcc_config.block = MDP_LOGICAL_BLOCK_DISP_0;
 	pcc_config.ops = MDP_PP_OPS_READ;
 
+#ifdef CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL
+	mdss_mdp_pcc_config(fb0_ctl->mfd, &pcc_config, &copyback, copy_from_kernel);
+#else
 	mdss_mdp_pcc_config(fb0_ctl->mfd, &pcc_config, &copyback);
+#endif /* CONFIG_FB_MSM_MDSS_SPECIFIC_PANEL */
 
 	/* LiveDisplay disables pcc when using default values and regs
 	 * are zeroed on pp resume, so throw these values out.
