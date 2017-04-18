@@ -155,11 +155,11 @@ if [ -n "$BUILD_NUMBER" ]; then
 export KBUILD_BUILD_VERSION="$BUILD_NUMBER"
 fi
 
-BUILD_CROSS_COMPILE=aarch64-linux-android-4.9
+BUILD_CROSS_COMPILE=aarch64-linux-android-6.x
 
 # set build env
 export ARCH=arm64
-export CROSS_COMPILE=$PWD/../../../prebuilts/gcc/darwin-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+export CROSS_COMPILE=$PWD/../../../prebuilts/gcc/darwin-x86/aarch64/$BUILD_CROSS_COMPILE/bin/aarch64-linux-android-
 . version
 export LOCALVERSION="-$BUILD_LOCALVERSION"
 
