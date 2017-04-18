@@ -60,6 +60,16 @@ copy_ramdisk()
     find $RAMDISK_TMP_DIR -name .gitignore | xargs rm --force
 }
 
+clean_up()
+{
+   # force regeneration of .dtb and Image files for every compile
+    rm -f $OBJ_DIR/arch/arm64/boot/Image
+    rm -f $OBJ_DIR/arch/arm64/boot/Image.gz
+    rm -f $OBJ_DIR/arch/arm64/boot/Image.gz-dtb
+    rm -f $BIN_DIR/*.zip
+    rm -f $BIN_DIR/*.img
+}
+
 make_kernel()
 {
 
@@ -173,6 +183,8 @@ echo "=====> COPY RAMDISK"
 echo -e "${restore}"
 copy_ramdisk
 
+# clean up
+clean_up
 
 # make start
 make_kernel
