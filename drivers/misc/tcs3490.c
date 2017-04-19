@@ -717,9 +717,9 @@ static int tcs3490_check_and_report(struct tcs3490_chip *chip)
     if (ret)
         goto exit_clr;
 
-	mutex_lock(&chip->lock);
+    mutex_lock(&chip->lock);
     status = chip->shadow[TCS3490_STATUS];
-	mutex_unlock(&chip->lock);
+    mutex_unlock(&chip->lock);
 
     saturation = chip->als_inf.saturation;
     
@@ -1011,7 +1011,7 @@ static ssize_t tcs3490_als_gain_store(struct device *dev,
             gain != 60 && gain != 64)
         return -EINVAL;
 
-	mutex_lock(&chip->lock);
+    mutex_lock(&chip->lock);
 	if (gain) {
 		chip->als_gain_auto = false;
 		rc = tcs3490_set_als_gain(chip, gain);
@@ -1077,8 +1077,8 @@ static ssize_t tcs3490_als_itime_store(struct device *dev,
     if (rc)
         return -EINVAL;
 
-	mutex_lock(&chip->lock);
-	chip->shadow[TCS3490_ALS_TIME] =
+    mutex_lock(&chip->lock);
+    chip->shadow[TCS3490_ALS_TIME] =
 		TCS3490_MAX_INTEGRATION_CYCLES - (u8)itime;
 	rc = tcs3490_flush_regs(chip);
 	if (!rc)
