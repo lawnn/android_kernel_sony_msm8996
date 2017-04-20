@@ -27,6 +27,8 @@
 #include <linux/pm.h>
 #include <linux/slab.h>
 
+static struct ldo_vibrator_data *gdata;
+
 enum ldo_vibrator_state {
 	LDO_VIBRATOR_OFF,
 	LDO_VIBRATOR_ON,
@@ -96,6 +98,11 @@ static void ldo_vibrator_vib_enable(struct timed_output_dev *dev, int value)
 	}
 	mutex_unlock(&data->lock);
 	schedule_work(&data->work);
+}
+
+void set_vibrate(int value)
+{
+	ldo_vibrator_vib_enable(&gdata->timed_dev, value);
 }
 
 #ifdef CONFIG_PM
